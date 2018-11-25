@@ -212,8 +212,3 @@ class PythonChallenge:
         print "Credenciales: \n\tUsername: " + username + "\n\tPassword: " + password
         webbrowser.open("http://www.pythonchallenge.com/pc/return/good.html?un={}&pw={}".format(username, password))
 
-def abre_la_cancion(num):
-    if num == 1:
-        webbrowser.open("https://www.google.com/url?sa=t&rct=j&q=&esrc=s&source=web&cd=1&cad=rja&uact=8&ved=2ahUKEwiC-MqfteveAhUKY6wKHUg6BBMQyCkwAHoECAUQBA&url=https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3DixMUdYubMHk&usg=AOvVaw0cRPXj6eoxFz90lbWeSzkT")
-    elif num == 2:
-        webbrowser.open("https://www.youtube.com/watch?v=BGa3AqeqRy0")
