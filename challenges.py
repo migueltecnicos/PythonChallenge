@@ -127,7 +127,7 @@ class PythonChallenge:
     @staticmethod
     def level_6():
         # URL de inicio http://www.pythonchallenge.com/pc/def/channel.html
-        # Hay que sustituir linkedlist.html por el resultado
+        # Hay que sustituir channel.html por el resultado
 
         # Hay que descargar un fichero zip, saca el contenido, y luego lo borra:
         r = requests.get("http://www.pythonchallenge.com/pc/def/channel.zip")
@@ -157,7 +157,60 @@ class PythonChallenge:
         # Llegados a este punto, se consigue un mensaje "Collect the comments", se miran los comentarios del ZIP
         print colecta_comentarios
         # Abre la URL resuelta:
-        webbrowser.open("http://www.pythonchallenge.com/pc/def/{}.html".format("hockey"))
+        webbrowser.open("http://www.pythonchallenge.com/pc/def/{}.html".format("oxygen"))
+
+    @staticmethod
+    def level_7():
+        # URL de inicio http://www.pythonchallenge.com/pc/def/oxygen.html
+        # Hay que sustituir oxygen por el resultado
+
+        # Descarga la imagen
+        r = requests.get("http://www.pythonchallenge.com/pc/def/oxygen.png")
+
+        # La carga con pillow
+        from PIL import Image
+        from io import BytesIO
+        img = Image.open(BytesIO(r.content))
+
+        # Extrae el mensaje oculto en los píxeles, quitando duplicados mediante el acceso por índices
+        indices = [0] + range(5, img.width, 7)
+        msg = "".join(chr(img.getpixel((x, img.height / 2))[0]) for x in indices)
+        print "Mensaje extraido:", msg
+
+        # El mensaje anterior contiene la solución también codificada, la descodifica
+        import ast
+        a = re.findall("\[(.*?)\]", msg, re.DOTALL)[0]
+        solucion = "".join(chr(x) for x in ast.literal_eval(a)) # Convierte la representación textual de la lista, en lista
+        print a, "-->", solucion
+
+        # Otra opción para extraer la lista de números desde msg y convertirla a caracteres:
+        solucion = "".join((map(chr, map(int, re.findall("\d+", msg)))))
+        print "Segunda opción:", solucion
+
+        # Abre la URL resuelta:
+        webbrowser.open("http://www.pythonchallenge.com/pc/def/{}.html".format(solucion))
+
+    @staticmethod
+    def level_8():
+        # URL de inicio http://www.pythonchallenge.com/pc/def/integrity.html
+        # Hay que averiguar nombre de usuario y contraseña, y acceder a http://www.pythonchallenge.com/pc/return/good.html
+
+        # Descarga comentario para decodificar nombre de usuario y contraseña
+        r = requests.get("http://www.pythonchallenge.com/pc/def/integrity.html")
+        un = re.findall("un: '(.*?)'\n", r.text, re.DOTALL)[0]
+        pw = re.findall("pw: '(.*?)'\n", r.text, re.DOTALL)[0]
+
+        # Se convierte el texto para poder pasárselo a BZ2
+        un = eval("'%s'" % un)
+        pw = eval("'%s'" % pw)
+
+        import bz2
+        username = bz2.decompress(un)
+        password = bz2.decompress(pw)
+
+        # No se puede automatizar el acceso con
+        print "Credenciales: \n\tUsername: " + username + "\n\tPassword: " + password
+        webbrowser.open("http://www.pythonchallenge.com/pc/return/good.html?un={}&pw={}".format(username, password))
 
 def abre_la_cancion(num):
     if num == 1:
