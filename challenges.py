@@ -211,4 +211,149 @@ class PythonChallenge:
         # No se puede automatizar el acceso con
         print "Credenciales: \n\tUsername: " + username + "\n\tPassword: " + password
         webbrowser.open("http://www.pythonchallenge.com/pc/return/good.html?un={}&pw={}".format(username, password))
+        print "Solución: http://www.pythonchallenge.com/pcc/return/good.html:huge:file"
+    @staticmethod
+    def level_9():
+        # URL de inicio http://www.pythonchallenge.com/pc/return/good.html:huge:file
+        # Hay que averiguar qué significan los números, dibujándolos con alguna herramienta gráfica
 
+        from requests.auth import HTTPBasicAuth
+        # Descarga first y second
+        r = requests.get("http://www.pythonchallenge.com/pc/return/good.html", auth=HTTPBasicAuth("huge", "file"))
+        first = map(int, re.findall("first:\s+(.*)\s+second:", r.text, re.DOTALL)[0].strip().replace('\n', '').split(',')) # Con map, se convierten todos los números de STR a INT
+        second = map(int, re.findall("second:\s+(.*)\s+-->", r.text, re.DOTALL)[0].strip().replace('\n', '').split(','))
+
+        from PIL import Image, ImageDraw
+        im = Image.new('RGB', (500,500))
+        draw = ImageDraw.Draw(im)
+        draw.polygon(first, fill='white')
+        draw.polygon(second, fill='white')
+        im.show()
+
+        print "Se dibuja una vaca. Al entrar en cow.html, indica que es el macho, que es el toro --> bull.html"
+        webbrowser.open("http://www.pythonchallenge.com/pc/return/{}.html".format("bull"))
+
+    @staticmethod
+    def level_10():
+        # URL de inicio http://www.pythonchallenge.com/pc/return/bull.html
+        # Hay que averiguar la longitud del 30 elemento de la serie 1, 11, 21, 1211, 111221, etc (look-and-say)
+
+        import itertools
+        x = "1"
+        for n in range(30):
+            x = "".join([str(len(list(j))) + i for i, j in itertools.groupby(x)])
+        print x
+        print len(x)
+
+        webbrowser.open("http://www.pythonchallenge.com/pc/return/{}.html".format(len(x)))
+
+    @staticmethod
+    def level_11():
+        # URL de inicio http://www.pythonchallenge.com/pc/return/5808.html
+        # Por el título de la página (impar-par), y la foto borrosa, parece que hay que separar la imagen en 2, o
+        # descartar algunos de los píxels
+
+        from requests.auth import HTTPBasicAuth
+        r = requests.get("http://www.pythonchallenge.com/pc/return/cave.jpg", auth=HTTPBasicAuth("huge","file"))
+        # La carga con pillow
+        from PIL import Image
+        from io import BytesIO
+        img = Image.open(BytesIO(r.content))
+
+        ancho, alto = img.size
+
+        img_par = Image.new(img.mode, (ancho // 2, alto // 2))
+        img_impar = Image.new(img.mode, (ancho // 2, alto // 2))
+
+        for i in range(ancho):
+            for j in range(alto):
+                pixel = img.getpixel((i,j))
+                if (i + j) % 2 == 1:
+                    img_impar.putpixel((i // 2, j // 2), pixel)
+                else:
+                    img_par.putpixel((i // 2, j // 2), pixel)
+
+        img_impar.show()
+        img_par.show()
+
+        # En la imagen par, se puede leer la palabra evil
+        webbrowser.open("http://www.pythonchallenge.com/pc/return/{}.html".format("evil"))
+
+    @staticmethod
+    def level_12():
+        # URL de inicio http://www.pythonchallenge.com/pc/return/evil.html
+        # dealing evil. Se descarga la imagen evil1.jpg. Se prueba con evil2.jpg, que indica que no es evil2.jpg, sino evil2.gfx
+
+        from requests.auth import HTTPBasicAuth
+        r = requests.get("http://www.pythonchallenge.com/pc/return/evil1.jpg", auth=HTTPBasicAuth("huge","file"))
+        r2 = requests.get("http://www.pythonchallenge.com/pc/return/evil2.gfx", auth=HTTPBasicAuth("huge","file"))
+
+        # Analizando la imagen, se observa que en realidad son 5 imágenes en una, por lo que se visualizan las 5
+        img = [None] * 5
+        # La carga con pillow
+        from PIL import Image
+        from io import BytesIO
+        for imagen in range(5):
+            try:
+                img[imagen] = Image.open(BytesIO(r2.content[imagen::5]))
+                img[imagen].show()
+            except:
+                open("%d.jpg" % imagen, 'wb').write(r2.content[imagen::5]) # La cuarta imagen está corrupta y da error, se guarda a pelo en el archivo
+
+        # Componiendo las imágenes se deduce el texto dis pro port ional
+        webbrowser.open("http://www.pythonchallenge.com/pc/return/{}.html".format("disproportional"))
+
+    @staticmethod
+    def level_13():
+        """
+        Al pulsar el número 5, lleva a un php que devuelve XML en lo que parece un formato de XMLRPC
+        Además, dice de llamar al Remote Evil. En el reto anterior, evil4.jpg indicaba algo sobre el malvado Bert...
+        :return:
+        """
+        import xmlrpclib
+        conn = xmlrpclib.Server("http://www.pythonchallenge.com/pc/phonebook.php")
+        print conn.system.listMethods()
+        print conn.system.methodHelp("phone")
+        print conn.system.methodSignature("phone")
+        print conn.phone("Bert")
+        webbrowser.open("http://www.pythonchallenge.com/pc/return/{}.html".format("italy"))
+
+    @staticmethod
+    def level_14():
+        """
+        Se observa la forma de espiral del bollo.
+        Se carga con PIL la imagen debajo del bollo.
+        :return:
+        """
+        import requests
+        from PIL import Image
+        from io import BytesIO
+        from requests.auth import HTTPBasicAuth
+
+        r = requests.get("http://www.pythonchallenge.com/pc/return/wire.png", auth=HTTPBasicAuth("huge", "file"))
+        img = Image.open(BytesIO(r.content))
+        print "Tamaño de la imagen original:", img.size
+
+        # Compone imagen de 100x100:
+        img2 = Image.new("RGB", (100, 100))
+        for npixel in xrange(10000):
+            pixel = img.getpixel((npixel, 0))
+            img2.putpixel((npixel % 100, npixel // 100), pixel)
+
+        # Saca un texto BIT. Se entra en bit.html, pero dice que no es correcto.
+
+        # Se prueba a componer los pixels en espiral, de la esquina superior izquierda en el sentido de las agujas del reloj
+        delta = [(1, 0), (0, 1), (-1, 0), (0, -1)]
+        x, y, p = -1, 0, 0
+        d = 200
+        while d / 2 > 0:
+            for v in delta:
+                steps = d // 2
+                for s in range(steps):
+                    x, y = x + v[0], y + v[1]
+                    img2.putpixel((x, y), img.getpixel((p, 0)))
+                    p += 1
+                d -= 1
+
+        img2.show()
+        webbrowser.open("http://www.pythonchallenge.com/pc/return/{}.html".format("cat"))
